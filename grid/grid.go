@@ -52,7 +52,7 @@ func New(rows, cols int, density float64, seed int64) *Grid {
 
 	for mr := 0; mr < megaRows; mr++ {
 		for mc := 0; mc < megaCols; mc++ {
-			if rng.Float64() < .1 { // we supply the density as an arg
+			if rng.Float64() < density { // we supply the density as an arg
 				// but this ^ flips a coin essentially. if density = .1, then about 10% of the mega cells become obstacles
 				for dr := 0; dr < 2; dr++ { // these hit the fine cells in the mega cell, which is a 2x2
 					for dc := 0; dc < 2; dc++ {
