@@ -77,7 +77,7 @@ func main() {
 
 	planned := 0
 	for range sizes {
-		planned += *nSeeds * *nTargets * (1 + len(agentCounts))
+		planned += *nSeeds * *nTargets * (1 + 2*len(agentCounts))
 	}
 
 	t0 := time.Now()
@@ -122,6 +122,22 @@ func main() {
 				for ti, target := range targets {
 					r := sim.Run(g, paths, target)
 					writeRow(w, "voronoi_stc", sz, sz, *density, k, s, ti, r)
+					done++
+				}
+			}
+			// --- DARP+STC for each k ---
+			for _, k := range agentCounts {
+				starts := allStarts[:k]
+				parts := partition.DARP(g, starts, partition.DefaultDARPConfig())
+
+				paths, ok := safeRegionPaths(g, parts, starts)
+				if !ok {
+					skipped += *nTargets
+					continue
+				}
+				for ti, target := range targets {
+					r := sim.Run(g, paths, target)
+					writeRow(w, "darp_stc", sz, sz, *density, k, s, ti, r)
 					done++
 				}
 			}
