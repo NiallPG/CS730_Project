@@ -31,6 +31,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"math"
 
 	"cs730_project/grid"
 	"cs730_project/partition"
@@ -40,12 +41,13 @@ import (
 
 func main() {
 	var (
-		outPath   = flag.String("out", "results.csv", "output CSV path")
-		nSeeds    = flag.Int("seeds", 50, "grid seeds per condition")
-		nTargets  = flag.Int("targets", 20, "random targets per grid")
-		density   = flag.Float64("density", 0.1, "obstacle density (mega-cell fraction)")
-		sizeFlag  = flag.String("sizes", "50,100", "comma-separated square grid side lengths")
-		agentFlag = flag.String("agents", "2,3,5", "comma-separated multi-agent counts")
+		outPath     = flag.String("out", "results.csv", "output CSV path")
+		nSeeds      = flag.Int("seeds", 50, "grid seeds per condition")
+		nTargets    = flag.Int("targets", 20, "random targets per grid")
+		density     = flag.Float64("density", 0.1, "obstacle density (mega-cell fraction)")
+		sizeFlag    = flag.String("sizes", "50,100", "comma-separated square grid side lengths")
+		agentFlag   = flag.String("agents", "2,3,5", "comma-separated multi-agent counts")
+		clusterFrac = flag.Float64("cluster", 0.3, "constrain agent starts within this fraction of grid dimension; 0 = uniform random")
 	)
 	flag.Parse()
 
@@ -94,7 +96,11 @@ func main() {
 
 			placeRNG := rand.New(rand.NewSource(s + 1_000_000))
 			targets := pickFineCells(g, *nTargets, placeRNG)
-			allStarts := pickMegaStarts(g, maxK, placeRNG)
+			allStarts, ok := pickMegaStarts(g, maxK, *clusterFrac, placeRNG)
+			if !ok {
+				skipped += *nTargets * (1 + 2*len(agentCounts))
+				continue
+			}
 
 			// --- single-agent STC ---
 			path1, ok := safeSTC(g, allStarts[0])
@@ -248,21 +254,56 @@ func pickFineCells(g *grid.Grid, n int, rng *rand.Rand) []grid.Position {
 	return free[:n]
 }
 
-// pickMegaStarts returns k distinct mega-cell starts, each given as the
-// top-left fine cell of its mega-cell.
-func pickMegaStarts(g *grid.Grid, k int, rng *rand.Rand) []grid.Position {
+// pickMegaStarts returns k distinct mega-cell starts as fine cells, or false
+// if the clustering constraint cannot be satisfied for this seed (too few
+// free mega-cells within cluster radius of the first random start). The
+// caller should skip the seed when false is returned.
+func pickMegaStarts(g *grid.Grid, k int, clusterFrac float64, rng *rand.Rand) ([]grid.Position, bool) {
 	free := g.FreeMegaCells()
-	rng.Shuffle(len(free), func(i, j int) { free[i], free[j] = free[j], free[i] })
 	if k > len(free) {
-		die("not enough free mega-cells for %d agents (have %d)", k, len(free))
+		return nil, false
 	}
-	out := make([]grid.Position, k)
-	for i := 0; i < k; i++ {
-		m := free[i]
-		out[i] = grid.Position{Row: m.Row * 2, Col: m.Col * 2}
+	rng.Shuffle(len(free), func(i, j int) { free[i], free[j] = free[j], free[i] })
+	first := free[0]
+
+	if clusterFrac <= 0 {
+		out := make([]grid.Position, k)
+		for i := 0; i < k; i++ {
+			m := free[i]
+			out[i] = grid.Position{Row: m.Row * 2, Col: m.Col * 2}
+		}
+		return out, true
 	}
-	return out
+
+	maxDim := g.MegaRows
+	if g.MegaCols > maxDim {
+		maxDim = g.MegaCols
+	}
+	radius := float64(maxDim) * clusterFrac
+
+	var candidates []grid.Position
+	for _, c := range free[1:] {
+		dr := float64(c.Row - first.Row)
+		dc := float64(c.Col - first.Col)
+		if math.Sqrt(dr*dr+dc*dc) <= radius {
+			candidates = append(candidates, c)
+		}
+	}
+	if len(candidates) < k-1 {
+		return nil, false
+	}
+
+	out := make([]grid.Position, 0, k)
+	out = append(out, grid.Position{Row: first.Row * 2, Col: first.Col * 2})
+	for i := 0; i < k-1; i++ {
+		m := candidates[i]
+		out = append(out, grid.Position{Row: m.Row * 2, Col: m.Col * 2})
+	}
+	return out, true
 }
+
+
+
 
 func mustParseInts(s string) []int {
 	parts := strings.Split(s, ",")
