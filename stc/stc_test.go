@@ -7,7 +7,7 @@ import (
 	"cs730_project/grid"
 )
 
-// --- core test cases ---
+
 
 func TestSTC_Empty4x4(t *testing.T) {
 	g := grid.New(4, 4, 0, 0)
@@ -27,15 +27,15 @@ func TestSTC_Empty8x8(t *testing.T) {
 	validateCircuit(t, g, start, STC(g, start))
 }
 
-// Tall thin grid: a single row of mega-cells. Stress-tests circumnavigation
-// when the spanning tree degenerates to a chain.
+
+
 func TestSTC_Tall2x10(t *testing.T) {
 	g := grid.New(2, 10, 0, 0)
 	start := grid.Position{Row: 0, Col: 0}
 	validateCircuit(t, g, start, STC(g, start))
 }
 
-// Same grid, multiple start positions. Each must produce a valid circuit.
+
 func TestSTC_VariousStarts(t *testing.T) {
 	g := grid.New(8, 8, 0, 0)
 	starts := []grid.Position{
@@ -51,8 +51,8 @@ func TestSTC_VariousStarts(t *testing.T) {
 	}
 }
 
-// Grids with random mega-cell obstacles. Skips seeds that produce a blocked
-// start or a disconnected free region (STC's preconditions don't hold there).
+
+
 func TestSTC_RandomGridSeeded(t *testing.T) {
 	for _, seed := range []int64{1, 7, 42, 100, 2024} {
 		t.Run(fmt.Sprintf("seed_%d", seed), func(t *testing.T) {
@@ -69,14 +69,14 @@ func TestSTC_RandomGridSeeded(t *testing.T) {
 	}
 }
 
-// --- helpers ---
 
-// validateCircuit asserts the four acceptance criteria for a Hamiltonian
-// coverage circuit:
-//  1. length == free-cell count
-//  2. starts at the given start cell
-//  3. each entry is unique, free, and in-bounds
-//  4. consecutive entries (and the last → start closing edge) are 4-adjacent
+
+
+
+
+
+
+
 func validateCircuit(t *testing.T, g *grid.Grid, start grid.Position, path []grid.Position) {
 	t.Helper()
 	free := g.FreeCells()
@@ -117,9 +117,9 @@ func adjacent(a, b grid.Position) bool {
 	return dr+dc == 1
 }
 
-// megaConnected reports whether every free mega-cell is reachable from root
-// via 4-connectivity. Used to gate tests against random grids that happen
-// to produce disconnected free regions.
+
+
+
 func megaConnected(g *grid.Grid, root grid.Position) bool {
 	visited := map[grid.Position]bool{root: true}
 	queue := []grid.Position{root}

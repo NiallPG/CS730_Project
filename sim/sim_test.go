@@ -4,17 +4,17 @@ import (
 	"math"
 	"testing"
 
-	"cs730_project/grid" // adjust to match the module path in go.mod
+	"cs730_project/grid"
 )
 
 func TestRun_SingleAgentTargetMidway(t *testing.T) {
 	g := grid.New(4, 4, 0, 0)
-	// Path: row 0 left-to-right, then row 1 right-to-left, etc.
+
 	path := []grid.Position{
 		{0, 0}, {0, 1}, {0, 2}, {0, 3},
 		{1, 3}, {1, 2}, {1, 1}, {1, 0},
 	}
-	target := grid.Position{Row: 1, Col: 2} // index 5 in the path
+	target := grid.Position{Row: 1, Col: 2}
 
 	r := Run(g, map[int][]grid.Position{0: path}, target)
 
@@ -53,13 +53,13 @@ func TestRun_TargetNotFound(t *testing.T) {
 
 func TestRun_TwoAgentsImbalanced(t *testing.T) {
 	g := grid.New(4, 4, 0, 0)
-	// Agent 0 takes 8 ticks, agent 1 takes 4.
+
 	long := []grid.Position{
 		{0, 0}, {0, 1}, {0, 2}, {0, 3},
 		{1, 3}, {1, 2}, {1, 1}, {1, 0},
 	}
 	short := []grid.Position{{3, 3}, {3, 2}, {3, 1}, {3, 0}}
-	target := grid.Position{Row: 3, Col: 1} // agent 1 reaches at tick 2
+	target := grid.Position{Row: 3, Col: 1}
 
 	r := Run(g, map[int][]grid.Position{0: long, 1: short}, target)
 
@@ -69,8 +69,8 @@ func TestRun_TwoAgentsImbalanced(t *testing.T) {
 	if r.TimeToDiscovery != 2 {
 		t.Errorf("TimeToDiscovery = %d, want 2", r.TimeToDiscovery)
 	}
-	// Agent 0: moves all 7 ticks → 7/7 = 1.0
-	// Agent 1: moves on ticks 1-3, idles on 4-7 → 3/7
+
+
 	if r.Utilization[0] != 1.0 {
 		t.Errorf("Utilization[0] = %v, want 1.0", r.Utilization[0])
 	}
@@ -79,12 +79,12 @@ func TestRun_TwoAgentsImbalanced(t *testing.T) {
 	}
 }
 
-// Earliest-tick tiebreak: if two agents both visit the target, discovery
-// is the smaller tick.
+
+
 func TestRun_DiscoveryEarliestTick(t *testing.T) {
 	g := grid.New(4, 4, 0, 0)
-	a := []grid.Position{{0, 0}, {0, 1}, {0, 2}, {0, 3}} // hits (0,3) at t=3
-	b := []grid.Position{{1, 3}, {0, 3}}                 // hits (0,3) at t=1
+	a := []grid.Position{{0, 0}, {0, 1}, {0, 2}, {0, 3}}
+	b := []grid.Position{{1, 3}, {0, 3}}
 	target := grid.Position{Row: 0, Col: 3}
 
 	r := Run(g, map[int][]grid.Position{0: a, 1: b}, target)

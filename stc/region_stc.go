@@ -6,19 +6,19 @@ import (
 	"cs730_project/grid"
 )
 
-// RegionSTC returns a coverage path that visits every fine cell of the given
-// region exactly once, starting at start. region is a list of mega-cells
-// (typically one agent's Voronoi partition); any cell outside region is
-// treated as blocked. The returned path has length 4 * len(region) and the
-// last entry is 4-adjacent to start.
-//
-// Preconditions:
-//   - start is a free fine cell.
-//   - start's mega-cell is in region.
-//   - region is 4-connected through mega-cell adjacency.
-//
-// Voronoi partitions always satisfy the third condition by construction
-// (multi-source BFS produces connected regions). Other partitioners may not.
+
+
+
+
+
+
+
+
+
+
+
+
+
 func RegionSTC(g *grid.Grid, region []grid.Position, start grid.Position) []grid.Position {
 	if !g.Free(start.Row, start.Col) {
 		panic(fmt.Sprintf("RegionSTC: start (%d,%d) is blocked or out of bounds",
@@ -45,7 +45,7 @@ func RegionSTC(g *grid.Grid, region []grid.Position, start grid.Position) []grid
 	return regionCircumnavigate(g, t, start, inRegion)
 }
 
-// buildRegionTree is buildSpanningTree restricted to mega-cells in region.
+
 func buildRegionTree(g *grid.Grid, root grid.Position,
 	region map[grid.Position]bool) (tree, map[grid.Position]bool) {
 
@@ -76,8 +76,8 @@ func buildRegionTree(g *grid.Grid, root grid.Position,
 	return t, visited
 }
 
-// regionCircumnavigate is circumnavigate with mega-cells outside region
-// treated as blocked. dirs and turnOffsets are reused from stc.go.
+
+
 func regionCircumnavigate(g *grid.Grid, t tree, start grid.Position,
 	region map[grid.Position]bool) []grid.Position {
 

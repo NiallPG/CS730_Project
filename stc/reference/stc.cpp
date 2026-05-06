@@ -9,9 +9,9 @@ using namespace std;
 struct Position {
     int r, c;
     bool operator==(const Position& other) const { return r == other.r && c == other.c; }
-    bool operator<(const Position& other) const { 
-        if (r != other.r) return r < other.r; 
-        return c < other.c; 
+    bool operator<(const Position& other) const {
+        if (r != other.r) return r < other.r;
+        return c < other.c;
     }
 };
 
@@ -27,7 +27,7 @@ public:
         cols = (c % 2 == 0) ? c : c + 1;
         megaRows = rows / 2;
         megaCols = cols / 2;
-        
+
         blocked.assign(rows, vector<bool>(cols, false));
         treeEdges.assign(megaRows, vector<vector<Position>>(megaCols));
     }
@@ -49,11 +49,11 @@ public:
     void buildSpanningTree(Position startMega) {
         set<Position> visited;
         stack<Position> s;
-        
+
         s.push(startMega);
         visited.insert(startMega);
 
-        int dr[] = {-1, 0, 1, 0}; // U, R, D, L
+        int dr[] = {-1, 0, 1, 0};
         int dc[] = {0, 1, 0, -1};
 
         while (!s.empty()) {
@@ -62,15 +62,15 @@ public:
 
             for (int i = 0; i < 4; i++) {
                 Position next = {curr.r + dr[i], curr.c + dc[i]};
-                
+
                 if (isMegaFree(next.r, next.c) && visited.find(next) == visited.end()) {
                     treeEdges[curr.r][curr.c].push_back(next);
-                    treeEdges[next.r][next.c].push_back(curr); 
-                    
+                    treeEdges[next.r][next.c].push_back(curr);
+
                     visited.insert(next);
                     s.push(next);
                     foundUnvisited = true;
-                    break; 
+                    break;
                 }
             }
             if (!foundUnvisited) s.pop();
@@ -95,7 +95,7 @@ public:
     void generatePath(Position startFine, Position targetFine) {
         cout << "[Start]  Fine-Cell (" << startFine.r << "," << startFine.c << ")\n";
         cout << "[Target] Fine-Cell (" << targetFine.r << "," << targetFine.c << ")\n";
-        
+
         if (blocked[targetFine.r][targetFine.c]) {
             cout << "Target is inside an obstacle!\n";
             return;
@@ -103,32 +103,32 @@ public:
 
         int r = startFine.r;
         int c = startFine.c;
-        int heading = 1; 
+        int heading = 1;
         int dirs[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
         char dirChars[] = {'U', 'R', 'D', 'L'};
-        int turnOffsets[] = {1, 0, 3, 2}; 
-        
-        vector<char> pathDirections;
-        vector<Position> pathCoords; 
-        pathCoords.push_back({r, c}); // Record start position
+        int turnOffsets[] = {1, 0, 3, 2};
 
-        int maxSteps = rows * cols * 2; 
+        vector<char> pathDirections;
+        vector<Position> pathCoords;
+        pathCoords.push_back({r, c});
+
+        int maxSteps = rows * cols * 2;
         int steps = 0;
 
         while (!(r == targetFine.r && c == targetFine.c) && steps < maxSteps) {
             bool moved = false;
-            
+
             for (int offset : turnOffsets) {
                 int tryHeading = (heading + offset) % 4;
                 int nr = r + dirs[tryHeading][0];
                 int nc = c + dirs[tryHeading][1];
 
                 if (isValidMove(r, c, nr, nc)) {
-                    heading = tryHeading; 
-                    r = nr;               
+                    heading = tryHeading;
+                    r = nr;
                     c = nc;
                     pathDirections.push_back(dirChars[heading]);
-                    pathCoords.push_back({r, c}); // Record new position
+                    pathCoords.push_back({r, c});
                     moved = true;
                     break;
                 }
@@ -169,19 +169,19 @@ public:
     void printVisualPathMap(Position startFine, Position targetFine, const vector<Position>& pathCoords) {
         vector<vector<char>> displayMap(rows, vector<char>(cols, '.'));
 
-        // 1. Draw obstacles
+
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 if (blocked[r][c]) displayMap[r][c] = '#';
             }
         }
 
-        // 2. Draw path
+
         for (const Position& p : pathCoords) {
             displayMap[p.r][p.c] = '*';
         }
 
-        // 3. Draw Start and Target (overwriting the path asterisk at those exact spots)
+
         displayMap[startFine.r][startFine.c] = 'S';
         displayMap[targetFine.r][targetFine.c] = 'T';
 
@@ -198,24 +198,24 @@ public:
 
 int main() {
     STCGrid grid(6, 6);
-    
-    // Set obstacle in the center mega-cell
+
+
     grid.setObstacle(1, 1);
-    
+
     grid.printEmptyGrid();
     grid.buildSpanningTree({0, 0});
 
-    Position robotStart = {1, 1}; 
-    Position target = {5, 0}; 
-    
+    Position robotStart = {1, 1};
+    Position target = {5, 0};
+
     grid.generatePath(robotStart, target);
 
     return 0;
 
-    // run the code with:
-    // g++ -std=c++17 stc.cpp -o stc
 
-    // then do:
-    // ./stc
+
+
+
+
 
 }

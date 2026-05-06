@@ -1,25 +1,25 @@
-// Command run is the experiment harness. It sweeps the comparison cube
-// (algorithm × grid size × agent count × seed × target) and writes one CSV
-// row per simulation.
-//
-// Output schema (one row per run):
-//
-//	algorithm, rows, cols, density, num_agents, seed, target_idx,
-//	makespan, time_to_discovery, mean_utilization, min_utilization
-//
-// Conventions:
-//   - Single-agent STC is run once per (size, seed, target); num_agents=1.
-//   - Voronoi+STC is run for every (k, seed, target) with k from -agents.
-//   - Targets are random free fine cells; the same set is reused across
-//     algorithms within a (size, seed) so comparisons are paired.
-//   - Agent starts are placed at the top-left fine cell of distinct random
-//     free mega-cells. The same start sequence is used as a prefix for
-//     every k, and the first start is also the single-agent start.
-//   - Seeds whose grid is disconnected at the mega-cell level are skipped.
-//
-// Usage:
-//
-//	go run ./cmd/run/ -out results.csv -seeds 50 -targets 20 -sizes 50,100 -agents 2,3,5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package main
 
 import (
@@ -102,7 +102,7 @@ func main() {
 				continue
 			}
 
-			// --- single-agent STC ---
+
 			path1, ok := safeSTC(g, allStarts[0])
 			if !ok {
 				skipped += *nTargets
@@ -115,7 +115,7 @@ func main() {
 				}
 			}
 
-			// --- Voronoi+STC for each k ---
+
 			for _, k := range agentCounts {
 				starts := allStarts[:k]
 				parts := partition.Voronoi(g, starts)
@@ -131,7 +131,7 @@ func main() {
 					done++
 				}
 			}
-			// --- DARP+STC for each k ---
+
 			for _, k := range agentCounts {
 				starts := allStarts[:k]
 				parts := partition.DARP(g, starts, partition.DefaultDARPConfig())
@@ -161,7 +161,7 @@ func main() {
 		done, skipped, planned, time.Since(t0).Round(time.Second))
 }
 
-// safeSTC catches panics so a bad seed doesn't kill the run.
+
 func safeSTC(g *grid.Grid, start grid.Position) (path []grid.Position, ok bool) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -172,8 +172,8 @@ func safeSTC(g *grid.Grid, start grid.Position) (path []grid.Position, ok bool) 
 	return stc.STC(g, start), true
 }
 
-// safeRegionPaths runs RegionSTC on every partition. If any panic, the whole
-// k-agent configuration for this seed is skipped.
+
+
 func safeRegionPaths(g *grid.Grid, parts map[int][]grid.Position,
 	starts []grid.Position) (paths map[int][]grid.Position, ok bool) {
 
@@ -254,10 +254,10 @@ func pickFineCells(g *grid.Grid, n int, rng *rand.Rand) []grid.Position {
 	return free[:n]
 }
 
-// pickMegaStarts returns k distinct mega-cell starts as fine cells, or false
-// if the clustering constraint cannot be satisfied for this seed (too few
-// free mega-cells within cluster radius of the first random start). The
-// caller should skip the seed when false is returned.
+
+
+
+
 func pickMegaStarts(g *grid.Grid, k int, clusterFrac float64, rng *rand.Rand) ([]grid.Position, bool) {
 	free := g.FreeMegaCells()
 	if k > len(free) {

@@ -10,20 +10,20 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 CSV_PATH = sys.argv[1] if len(sys.argv) > 1 else 'results.csv'
-GRID_SIZE = 100   # focus on 100x100 for the poster
-K_FOR_UTIL = 5   # utilization comparison at this agent count (matches proposal Figure 2)
+GRID_SIZE = 100                                    
+K_FOR_UTIL = 5                                                                           
 
 df = pd.read_csv(CSV_PATH)
 df = df[df['rows'] == GRID_SIZE]
 
-# ----- Summary table -----
+                           
 summary = df.groupby(['algorithm', 'num_agents'])[
     ['time_to_discovery', 'makespan', 'mean_utilization', 'min_utilization']
 ].mean().round(2)
 print(summary)
 print()
 
-# ----- Figure 1: discovery time vs num_agents -----
+                                                    
 fig, ax = plt.subplots(figsize=(8, 5))
 
 single = df[df['algorithm'] == 'single_agent_stc']
@@ -50,7 +50,7 @@ fig.tight_layout()
 fig.savefig('figure1_discovery.png', dpi=150)
 print('wrote figure1_discovery.png')
 
-# ----- Figure 2: utilization bars at k=K_FOR_UTIL -----
+                                                        
 fig, ax = plt.subplots(figsize=(8, 5))
 
 labels = ['Single Agent\nSTC']
@@ -81,7 +81,7 @@ fig.tight_layout()
 fig.savefig('figure2_utilization.png', dpi=150)
 print('wrote figure2_utilization.png')
 
-# ----- Figure 3: per-seed DARP/Voronoi makespan ratio at k=5 -----
+                                                                   
 v = df[(df['algorithm']=='voronoi_stc') & (df['num_agents']==5)].set_index(['seed','target_idx'])
 d = df[(df['algorithm']=='darp_stc')    & (df['num_agents']==5)].set_index(['seed','target_idx'])
 joined = v.join(d, lsuffix='_v', rsuffix='_d').drop_duplicates(subset=['makespan_v','makespan_d'])

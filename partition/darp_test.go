@@ -13,11 +13,11 @@ func TestDARP_TwoAgentsEmpty8x8(t *testing.T) {
 	parts := DARP(g, starts, DefaultDARPConfig())
 	validatePartition(t, g, starts, parts)
 
-	// On a perfectly symmetric grid with antidiagonal ties, DARP cannot
-	// always reach exact balance (all tie cells flip together), but it
-	// should produce a valid disjoint connected partition. We don't
-	// require strict balance here — see TestDARP_BalancesBetterThanVoronoi
-	// for the asymmetric case where DARP demonstrably wins.
+
+
+
+
+
 	t.Logf("8x8 empty split: %d vs %d", len(parts[0]), len(parts[1]))
 }
 
@@ -48,8 +48,8 @@ func TestDARP_RandomGridSeeded(t *testing.T) {
 			g := grid.New(10, 10, 0.10, seed)
 			starts := []grid.Position{{Row: 0, Col: 0}, {Row: 9, Col: 9}}
 
-			// Skip seeds where one start lands on an obstacle. Simple
-			// validity probe via mega-cell membership.
+
+
 			free := map[grid.Position]bool{}
 			for _, c := range g.FreeMegaCells() {
 				free[c] = true
@@ -66,11 +66,11 @@ func TestDARP_RandomGridSeeded(t *testing.T) {
 	}
 }
 
-// TestDARP_BeatsVoronoiOnObstacleGrids exercises the regime DARP is designed
-// for: realistic grids where obstacles break the BFS-distance symmetries that
-// trap Voronoi's tie-breaking. On any single seed DARP and Voronoi may tie
-// (especially on small or near-symmetric instances), but averaged over random
-// seeds DARP should produce strictly better balance.
+
+
+
+
+
 func TestDARP_BeatsVoronoiOnObstacleGrids(t *testing.T) {
 	var vTotal, dTotal int
 	usedSeeds := 0

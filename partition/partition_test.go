@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"cs730_project/grid" // adjust to match the module path in go.mod
+	"cs730_project/grid"
 )
 
 func TestVoronoi_TwoAgentsEmpty8x8(t *testing.T) {
@@ -58,13 +58,13 @@ func TestVoronoi_RandomGridSeeded(t *testing.T) {
 	}
 }
 
-// --- helpers ---
 
-// validatePartition asserts:
-//  1. every agent ID has an entry (possibly empty)
-//  2. partitions are pairwise disjoint
-//  3. union covers every free mega-cell reachable from any start
-//  4. each agent's start mega-cell is in its own partition
+
+
+
+
+
+
 func validatePartition(t *testing.T, g *grid.Grid, starts []grid.Position,
 	parts map[int][]grid.Position) {
 	t.Helper()
@@ -95,11 +95,11 @@ func validatePartition(t *testing.T, g *grid.Grid, starts []grid.Position,
 		}
 	}
 
-	// Every free mega-cell reachable from at least one start should be
-	// claimed. On a connected grid, that's all of them.
+
+
 	for _, m := range g.FreeMegaCells() {
 		if _, claimed := seen[m]; !claimed {
-			// Allow this only if m is unreachable from every start.
+
 			reachable := false
 			for _, s := range starts {
 				if megaReachable(g, grid.MegaCellOf(s.Row, s.Col), m) {

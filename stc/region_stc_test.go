@@ -8,7 +8,7 @@ import (
 	"cs730_project/partition"
 )
 
-// Single mega-cell region: should produce a 4-cell circuit.
+
 func TestRegionSTC_SingleMegaCell(t *testing.T) {
 	g := grid.New(4, 4, 0, 0)
 	region := []grid.Position{{Row: 0, Col: 0}}
@@ -17,7 +17,7 @@ func TestRegionSTC_SingleMegaCell(t *testing.T) {
 	validateRegionCircuit(t, g, region, start, path)
 }
 
-// Equivalence: STC on the full grid == RegionSTC with all mega-cells.
+
 func TestRegionSTC_EqualsFullSTC(t *testing.T) {
 	g := grid.New(8, 8, 0, 0)
 	start := grid.Position{Row: 0, Col: 0}
@@ -36,8 +36,8 @@ func TestRegionSTC_EqualsFullSTC(t *testing.T) {
 	}
 }
 
-// Realistic case: Voronoi splits an 8x8 between two corner agents,
-// each agent runs RegionSTC on its partition.
+
+
 func TestRegionSTC_VoronoiPartitionedCoverage(t *testing.T) {
 	g := grid.New(8, 8, 0, 0)
 	starts := []grid.Position{
@@ -58,7 +58,7 @@ func TestRegionSTC_VoronoiPartitionedCoverage(t *testing.T) {
 	}
 }
 
-// Same as above but on random obstacle-laden grids.
+
 func TestRegionSTC_VoronoiOnRandomGrids(t *testing.T) {
 	for _, seed := range []int64{1, 7, 42, 100, 2024} {
 		t.Run(fmt.Sprintf("seed_%d", seed), func(t *testing.T) {
@@ -87,8 +87,8 @@ func TestRegionSTC_VoronoiOnRandomGrids(t *testing.T) {
 	}
 }
 
-// validateRegionCircuit asserts: length = 4*len(region); all cells are
-// inside region; unique; 4-adjacent; closes back to start.
+
+
 func validateRegionCircuit(t *testing.T, g *grid.Grid, region []grid.Position,
 	start grid.Position, path []grid.Position) {
 	t.Helper()
