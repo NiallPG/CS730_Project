@@ -1,37 +1,15 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 package main
 
 import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-	"math"
 
 	"cs730_project/grid"
 	"cs730_project/partition"
@@ -45,7 +23,7 @@ func main() {
 		nSeeds      = flag.Int("seeds", 50, "grid seeds per condition")
 		nTargets    = flag.Int("targets", 20, "random targets per grid")
 		density     = flag.Float64("density", 0.1, "obstacle density (mega-cell fraction)")
-		sizeFlag    = flag.String("sizes", "50,100", "comma-separated square grid side lengths")
+		sizeFlag    = flag.String("sizes", "50,100,200", "comma-separated square grid side lengths")
 		agentFlag   = flag.String("agents", "2,3,5", "comma-separated multi-agent counts")
 		clusterFrac = flag.Float64("cluster", 0.3, "constrain agent starts within this fraction of grid dimension; 0 = uniform random")
 	)
@@ -73,6 +51,7 @@ func main() {
 		"algorithm", "rows", "cols", "density", "num_agents", "seed",
 		"target_idx", "makespan", "time_to_discovery",
 		"mean_utilization", "min_utilization",
+		"partition_time_ns",
 	}); err != nil {
 		die("csv header: %v", err)
 	}
@@ -102,7 +81,7 @@ func main() {
 				continue
 			}
 
-
+			// --- single-agent STC (no partitioning) ---
 			path1, ok := safeSTC(g, allStarts[0])
 			if !ok {
 				skipped += *nTargets
@@ -110,15 +89,18 @@ func main() {
 				paths1 := map[int][]grid.Position{0: path1}
 				for ti, target := range targets {
 					r := sim.Run(g, paths1, target)
-					writeRow(w, "single_agent_stc", sz, sz, *density, 1, s, ti, r)
+					writeRow(w, "single_agent_stc", sz, sz, *density, 1, s, ti, r, 0)
 					done++
 				}
 			}
 
-
+			// --- Voronoi + STC ---
 			for _, k := range agentCounts {
 				starts := allStarts[:k]
+
+				tPart := time.Now()
 				parts := partition.Voronoi(g, starts)
+				partNs := time.Since(tPart).Nanoseconds()
 
 				paths, ok := safeRegionPaths(g, parts, starts)
 				if !ok {
@@ -127,14 +109,18 @@ func main() {
 				}
 				for ti, target := range targets {
 					r := sim.Run(g, paths, target)
-					writeRow(w, "voronoi_stc", sz, sz, *density, k, s, ti, r)
+					writeRow(w, "voronoi_stc", sz, sz, *density, k, s, ti, r, partNs)
 					done++
 				}
 			}
 
+			// --- DARP + STC ---
 			for _, k := range agentCounts {
 				starts := allStarts[:k]
+
+				tPart := time.Now()
 				parts := partition.DARP(g, starts, partition.DefaultDARPConfig())
+				partNs := time.Since(tPart).Nanoseconds()
 
 				paths, ok := safeRegionPaths(g, parts, starts)
 				if !ok {
@@ -143,7 +129,7 @@ func main() {
 				}
 				for ti, target := range targets {
 					r := sim.Run(g, paths, target)
-					writeRow(w, "darp_stc", sz, sz, *density, k, s, ti, r)
+					writeRow(w, "darp_stc", sz, sz, *density, k, s, ti, r, partNs)
 					done++
 				}
 			}
@@ -161,7 +147,6 @@ func main() {
 		done, skipped, planned, time.Since(t0).Round(time.Second))
 }
 
-
 func safeSTC(g *grid.Grid, start grid.Position) (path []grid.Position, ok bool) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -171,8 +156,6 @@ func safeSTC(g *grid.Grid, start grid.Position) (path []grid.Position, ok bool) 
 	}()
 	return stc.STC(g, start), true
 }
-
-
 
 func safeRegionPaths(g *grid.Grid, parts map[int][]grid.Position,
 	starts []grid.Position) (paths map[int][]grid.Position, ok bool) {
@@ -192,7 +175,7 @@ func safeRegionPaths(g *grid.Grid, parts map[int][]grid.Position,
 }
 
 func writeRow(w *csv.Writer, alg string, rows, cols int, density float64,
-	k int, seed int64, ti int, r sim.Result) {
+	k int, seed int64, ti int, r sim.Result, partNs int64) {
 
 	meanU, minU := summarizeUtil(r.Utilization)
 	_ = w.Write([]string{
@@ -207,6 +190,7 @@ func writeRow(w *csv.Writer, alg string, rows, cols int, density float64,
 		strconv.Itoa(r.TimeToDiscovery),
 		strconv.FormatFloat(meanU, 'f', 4, 64),
 		strconv.FormatFloat(minU, 'f', 4, 64),
+		strconv.FormatInt(partNs, 10),
 	})
 }
 
@@ -254,10 +238,6 @@ func pickFineCells(g *grid.Grid, n int, rng *rand.Rand) []grid.Position {
 	return free[:n]
 }
 
-
-
-
-
 func pickMegaStarts(g *grid.Grid, k int, clusterFrac float64, rng *rand.Rand) ([]grid.Position, bool) {
 	free := g.FreeMegaCells()
 	if k > len(free) {
@@ -301,9 +281,6 @@ func pickMegaStarts(g *grid.Grid, k int, clusterFrac float64, rng *rand.Rand) ([
 	}
 	return out, true
 }
-
-
-
 
 func mustParseInts(s string) []int {
 	parts := strings.Split(s, ",")
